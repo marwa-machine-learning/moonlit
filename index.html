@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Claims Fairy – Uncovering Hidden Property</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── CSS Variables ── */
+    :root {
+      --gold:       #c9a84c;
+      --gold-light: #e8c97a;
+      --gold-pale:  #f5e9c8;
+      --deep:       #0d0d18;
+      --mid:        #14142a;
+      --surface:    #1a1a30;
+      --text:       #e8e4d8;
+      --muted:      #9990b0;
+      --accent:     #8a6fff;
+      --radius:     6px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Jost', sans-serif;
+      background: var(--deep);
+      color: var(--text);
+      overflow-x: hidden;
+      cursor: default;
+    }
+
+    /* ── Starfield canvas ── */
+    #stars {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Utility ── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    section { position: relative; z-index: 2; }
+
+    .gold { color: var(--gold); }
+    .italic { font-style: italic; }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 1.4rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(13,13,24,0.95), transparent);
+      backdrop-filter: blur(4px);
+    }
+
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.55rem;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 0.04em;
+      text-decoration: none;
+    }
+
+    .nav-logo span {
+      font-style: italic;
+      font-weight: 300;
+      color: var(--text);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 400;
+      transition: color 0.25s;
+    }
+
+    .nav-links a:hover { color: var(--gold); }
+
+    .nav-cta {
+      background: transparent;
+      border: 1px solid var(--gold);
+      color: var(--gold) !important;
+      padding: 0.45rem 1.2rem;
+      border-radius: var(--radius);
+      font-size: 0.76rem !important;
+      letter-spacing: 0.14em;
+      transition: background 0.25s, color 0.25s !important;
+    }
+
+    .nav-cta:hover {
+      background: var(--gold) !important;
+      color: var(--deep) !important;
+    }
+
+    /* ── Hero ── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding-top: 6rem;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(138,111,255,0.12) 0%, transparent 70%),
+                  radial-gradient(ellipse 60% 40% at 80% 80%, rgba(201,168,76,0.08) 0%, transparent 60%);
+    }
+
+    .hero-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .hero-eyebrow {
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 400;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .hero-eyebrow::before {
+      content: '';
+      display: block;
+      width: 32px;
+      height: 1px;
+      background: var(--gold);
+    }
+
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3rem, 5.5vw, 5rem);
+      font-weight: 300;
+      line-height: 1.08;
+      letter-spacing: -0.01em;
+      margin-bottom: 1.6rem;
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .hero-sub {
+      font-size: 1rem;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.75;
+      margin-bottom: 2.4rem;
+      max-width: 42ch;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: var(--gold);
+      color: var(--deep);
+      padding: 0.85rem 2rem;
+      border-radius: var(--radius);
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: background 0.25s, transform 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: var(--gold-light);
+      transform: translateY(-2px);
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: transparent;
+      color: var(--text);
+      padding: 0.85rem 1.8rem;
+      border-radius: var(--radius);
+      font-size: 0.8rem;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.15);
+      cursor: pointer;
+      transition: border-color 0.25s, color 0.25s;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* Fairy illustration area */
+    .hero-visual {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .fairy-orb {
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 38% 38%,
+        rgba(201,168,76,0.18),
+        rgba(138,111,255,0.1) 50%,
+        transparent 75%);
+      border: 1px solid rgba(201,168,76,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      animation: orbPulse 4s ease-in-out infinite;
+    }
+
+    @keyframes orbPulse {
+      0%, 100% { box-shadow: 0 0 60px rgba(201,168,76,0.1), 0 0 120px rgba(138,111,255,0.06); }
+      50%       { box-shadow: 0 0 90px rgba(201,168,76,0.18), 0 0 180px rgba(138,111,255,0.1); }
+    }
+
+    .fairy-svg {
+      width: 220px;
+      height: 220px;
+      animation: fairyFloat 5s ease-in-out infinite;
+      filter: drop-shadow(0 0 18px rgba(201,168,76,0.5));
+    }
+
+    @keyframes fairyFloat {
+      0%, 100% { transform: translateY(0px) rotate(-1deg); }
+      50%       { transform: translateY(-14px) rotate(1deg); }
+    }
+
+    /* sparkles */
+    .sparkle {
+      position: absolute;
+      border-radius: 50%;
+      background: var(--gold-light);
+      animation: sparkleFade 3s ease-in-out infinite;
+    }
+
+    .sparkle:nth-child(1) { width:6px; height:6px; top:15%; left:20%; animation-delay:0s; }
+    .sparkle:nth-child(2) { width:4px; height:4px; top:70%; left:14%; animation-delay:0.8s; }
+    .sparkle:nth-child(3) { width:5px; height:5px; top:25%; right:16%; animation-delay:1.4s; }
+    .sparkle:nth-child(4) { width:3px; height:3px; top:60%; right:22%; animation-delay:0.4s; }
+    .sparkle:nth-child(5) { width:7px; height:7px; bottom:18%; left:50%; animation-delay:2s; }
+
+    @keyframes sparkleFade {
+      0%, 100% { opacity: 0; transform: scale(0.5); }
+      50%       { opacity: 1; transform: scale(1); }
+    }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      padding: 3rem 0;
+      border-top: 1px solid rgba(201,168,76,0.12);
+      border-bottom: 1px solid rgba(201,168,76,0.12);
+      background: rgba(201,168,76,0.03);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+      text-align: center;
+    }
+
+    .stat-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.6rem;
+      font-weight: 300;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    /* ── Section headings ── */
+    .section-tag {
+      font-size: 0.7rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 400;
+      margin-bottom: 0.8rem;
+    }
+
+    h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.2rem, 4vw, 3.4rem);
+      font-weight: 300;
+      line-height: 1.15;
+      margin-bottom: 1.2rem;
+    }
+
+    h2 em { font-style: italic; color: var(--gold); }
+
+    .section-intro {
+      font-size: 1rem;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.75;
+      max-width: 52ch;
+    }
+
+    /* ── How It Works ── */
+    #how {
+      padding: 7rem 0;
+    }
+
+    .how-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .how-header .section-intro { margin: 0 auto; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      position: relative;
+    }
+
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 44px;
+      left: 16.66%;
+      right: 16.66%;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+      z-index: 1;
+    }
+
+    .step {
+      background: var(--surface);
+      padding: 2.4rem 2rem;
+      text-align: center;
+      position: relative;
+      transition: background 0.3s;
+    }
+
+    .step:first-child { border-radius: 12px 0 0 12px; }
+    .step:last-child  { border-radius: 0 12px 12px 0; }
+    .step:hover { background: rgba(201,168,76,0.06); }
+
+    .step-num {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 1px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 300;
+      color: var(--gold);
+      margin: 0 auto 1.4rem;
+      background: var(--deep);
+      position: relative;
+      z-index: 2;
+    }
+
+    .step h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.35rem;
+      font-weight: 400;
+      margin-bottom: 0.75rem;
+      color: var(--text);
+    }
+
+    .step p {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    /* ── Services ── */
+    #services {
+      padding: 7rem 0;
+      background: radial-gradient(ellipse 70% 50% at 10% 50%, rgba(138,111,255,0.07) 0%, transparent 60%);
+    }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-top: 3.5rem;
+    }
+
+    .service-card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 2.2rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+
+    .service-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(201,168,76,0.05) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .service-card:hover {
+      border-color: rgba(201,168,76,0.3);
+      transform: translateY(-3px);
+    }
+
+    .service-card:hover::before { opacity: 1; }
+
+    .service-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .service-card h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 400;
+      margin-bottom: 0.6rem;
+      color: var(--text);
+    }
+
+    .service-card p {
+      font-size: 0.87rem;
+      color: var(--muted);
+      line-height: 1.72;
+      font-weight: 300;
+    }
+
+    /* ── Why Claims Fairy ── */
+    #why {
+      padding: 7rem 0;
+    }
+
+    .why-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      align-items: center;
+    }
+
+    .why-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1.4rem;
+      margin-top: 2.4rem;
+    }
+
+    .why-list li {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .why-check {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(201,168,76,0.12);
+      border: 1px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+      font-size: 0.7rem;
+      color: var(--gold);
+    }
+
+    .why-list li p {
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.65;
+      font-weight: 300;
+    }
+
+    .why-list li strong {
+      font-weight: 500;
+      color: var(--text);
+      display: block;
+      margin-bottom: 0.2rem;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.05rem;
+    }
+
+    /* Big decorative quote */
+    .big-quote {
+      background: var(--surface);
+      border-left: 3px solid var(--gold);
+      border-radius: 0 12px 12px 0;
+      padding: 2.4rem 2.4rem 2.4rem 2.8rem;
+      position: relative;
+    }
+
+    .big-quote::before {
+      content: '"';
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 7rem;
+      color: var(--gold);
+      opacity: 0.15;
+      position: absolute;
+      top: -1rem;
+      left: 1.2rem;
+      line-height: 1;
+    }
+
+    .big-quote blockquote {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.55rem;
+      font-style: italic;
+      font-weight: 300;
+      line-height: 1.55;
+      color: var(--text);
+      margin-bottom: 1.2rem;
+    }
+
+    .big-quote cite {
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-style: normal;
+    }
+
+    /* ── Testimonials ── */
+    #testimonials {
+      padding: 7rem 0;
+      background: linear-gradient(to bottom, transparent, rgba(201,168,76,0.03), transparent);
+    }
+
+    .testi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 3.5rem;
+    }
+
+    .testi-card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 1.8rem;
+      transition: border-color 0.3s;
+    }
+
+    .testi-card:hover { border-color: rgba(201,168,76,0.2); }
+
+    .testi-stars {
+      color: var(--gold);
+      font-size: 0.85rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .testi-text {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.72;
+      font-weight: 300;
+      margin-bottom: 1.2rem;
+      font-style: italic;
+    }
+
+    .testi-author {
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text);
+      font-weight: 400;
+    }
+
+    .testi-location {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.15rem;
+      font-weight: 300;
+    }
+
+    /* ── FAQ ── */
+    #faq {
+      padding: 7rem 0;
+    }
+
+    .faq-header { margin-bottom: 3rem; }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .faq-item {
+      background: var(--surface);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .faq-q {
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-family: 'Jost', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 400;
+      text-align: left;
+      padding: 1.3rem 1.6rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      transition: color 0.25s;
+    }
+
+    .faq-q:hover { color: var(--gold); }
+
+    .faq-arrow {
+      color: var(--gold);
+      font-size: 1.1rem;
+      transition: transform 0.3s;
+      flex-shrink: 0;
+    }
+
+    .faq-item.open .faq-arrow { transform: rotate(180deg); }
+
+    .faq-a {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease, padding 0.3s;
+      padding: 0 1.6rem;
+    }
+
+    .faq-item.open .faq-a {
+      max-height: 300px;
+      padding: 0 1.6rem 1.3rem;
+    }
+
+    .faq-a p {
+      font-size: 0.87rem;
+      color: var(--muted);
+      line-height: 1.75;
+      font-weight: 300;
+    }
+
+    /* ── CTA Banner ── */
+    #cta-banner {
+      padding: 5rem 0;
+    }
+
+    .cta-box {
+      background: linear-gradient(135deg, rgba(201,168,76,0.1) 0%, rgba(138,111,255,0.08) 100%);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 20px;
+      padding: 4rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-box::before {
+      content: '✦';
+      position: absolute;
+      font-size: 20rem;
+      color: rgba(201,168,76,0.03);
+      top: -4rem;
+      right: -3rem;
+      pointer-events: none;
+    }
+
+    .cta-box h2 { margin-bottom: 1rem; }
+
+    .cta-box p {
+      font-size: 1rem;
+      color: var(--muted);
+      font-weight: 300;
+      max-width: 48ch;
+      margin: 0 auto 2.2rem;
+      line-height: 1.7;
+    }
+
+    /* ── Contact ── */
+    #contact {
+      padding: 7rem 0;
+    }
+
+    .contact-inner {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 6rem;
+      align-items: start;
+    }
+
+    .contact-info { }
+
+    .contact-detail {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      margin-top: 1.8rem;
+    }
+
+    .contact-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: rgba(201,168,76,0.1);
+      border: 1px solid rgba(201,168,76,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .contact-detail h4 {
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.2rem;
+      font-weight: 400;
+    }
+
+    .contact-detail p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    /* Form */
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.1rem;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.45rem;
+      font-weight: 400;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'Jost', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 300;
+      padding: 0.8rem 1rem;
+      outline: none;
+      transition: border-color 0.25s;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--gold);
+    }
+
+    .field select option { background: var(--mid); }
+
+    .field textarea { resize: vertical; min-height: 110px; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 3rem 0 2rem;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 3rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+
+    .footer-brand p {
+      font-size: 0.83rem;
+      color: var(--muted);
+      font-weight: 300;
+      line-height: 1.65;
+      max-width: 30ch;
+      margin-top: 0.6rem;
+    }
+
+    .footer-col h4 {
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 400;
+      margin-bottom: 1rem;
+    }
+
+    .footer-col ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+
+    .footer-col a {
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 300;
+      transition: color 0.25s;
+    }
+
+    .footer-col a:hover { color: var(--gold); }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-top: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-bottom p {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    .footer-badge {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      border: 1px solid rgba(201,168,76,0.3);
+      padding: 0.3rem 0.8rem;
+      border-radius: 99px;
+      font-weight: 400;
+    }
+
+    /* ── Fade-in on scroll ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .hero-inner { grid-template-columns: 1fr; gap: 3rem; }
+      .hero-visual { order: -1; }
+      .fairy-orb { width: 260px; height: 260px; }
+      .fairy-svg { width: 170px; height: 170px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .steps { grid-template-columns: 1fr; gap: 1px; }
+      .steps::before { display: none; }
+      .step:first-child { border-radius: 12px 12px 0 0; }
+      .step:last-child  { border-radius: 0 0 12px 12px; }
+      .services-grid { grid-template-columns: 1fr; }
+      .why-inner { grid-template-columns: 1fr; gap: 3rem; }
+      .testi-grid { grid-template-columns: 1fr; }
+      .contact-inner { grid-template-columns: 1fr; gap: 3rem; }
+      .form-row { grid-template-columns: 1fr; }
+      .footer-inner { flex-direction: column; }
+    }
+
+    @media (max-width: 600px) {
+      .nav-links { display: none; }
+      .cta-box { padding: 2.5rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Starfield -->
+<canvas id="stars"></canvas>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Claims <span>Fairy</span> ✦</a>
+  <ul class="nav-links">
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#why">Why Us</a></li>
+    <li><a href="#faq">FAQ</a></li>
+    <li><a href="#contact" class="nav-cta">Free Claim Check</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="container">
+    <div class="hero-inner">
+      <div>
+        <p class="hero-eyebrow">Property Recovery Specialists</p>
+        <h1>Your <em>hidden</em> property<br>is waiting for you.</h1>
+        <p class="hero-sub">Millions in unclaimed property goes unnoticed every year. Claims Fairy specialises in identifying, locating, and recovering property assets that are rightfully yours — with no upfront costs.</p>
+        <div class="hero-buttons">
+          <a href="#contact" class="btn-primary">✦ Start Free Claim Check</a>
+          <a href="#how" class="btn-ghost">How It Works →</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="fairy-orb">
+          <div class="sparkle"></div>
+          <div class="sparkle"></div>
+          <div class="sparkle"></div>
+          <div class="sparkle"></div>
+          <div class="sparkle"></div>
+          <svg class="fairy-svg" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Wings -->
+            <ellipse cx="60" cy="90" rx="50" ry="28" transform="rotate(-20 60 90)" fill="rgba(201,168,76,0.15)" stroke="#c9a84c" stroke-width="0.8"/>
+            <ellipse cx="140" cy="90" rx="50" ry="28" transform="rotate(20 140 90)" fill="rgba(138,111,255,0.12)" stroke="#8a6fff" stroke-width="0.8"/>
+            <ellipse cx="55" cy="108" rx="32" ry="18" transform="rotate(-25 55 108)" fill="rgba(201,168,76,0.08)" stroke="#c9a84c" stroke-width="0.6"/>
+            <ellipse cx="145" cy="108" rx="32" ry="18" transform="rotate(25 145 108)" fill="rgba(138,111,255,0.08)" stroke="#8a6fff" stroke-width="0.6"/>
+            <!-- Body -->
+            <ellipse cx="100" cy="115" rx="14" ry="22" fill="rgba(201,168,76,0.2)" stroke="#c9a84c" stroke-width="1"/>
+            <!-- Head -->
+            <circle cx="100" cy="78" r="18" fill="rgba(245,233,200,0.15)" stroke="#c9a84c" stroke-width="1"/>
+            <!-- Crown -->
+            <path d="M86 66 L90 58 L95 64 L100 54 L105 64 L110 58 L114 66Z" fill="none" stroke="#c9a84c" stroke-width="0.9" stroke-linejoin="round"/>
+            <!-- Star dots on crown -->
+            <circle cx="90" cy="58" r="2" fill="#c9a84c"/>
+            <circle cx="100" cy="54" r="2.5" fill="#e8c97a"/>
+            <circle cx="110" cy="58" r="2" fill="#c9a84c"/>
+            <!-- Wand arm -->
+            <line x1="114" y1="110" x2="148" y2="80" stroke="#c9a84c" stroke-width="1.4"/>
+            <!-- Wand star -->
+            <polygon points="148,72 150,78 157,78 151,82 153,88 148,84 143,88 145,82 139,78 146,78" fill="#c9a84c" opacity="0.9"/>
+            <!-- Sparkle dots -->
+            <circle cx="158" cy="65" r="2.5" fill="#e8c97a" opacity="0.7"/>
+            <circle cx="163" cy="78" r="1.5" fill="#e8c97a" opacity="0.5"/>
+            <circle cx="155" cy="56" r="1.8" fill="#e8c97a" opacity="0.6"/>
+            <circle cx="40" cy="75" r="2" fill="#8a6fff" opacity="0.6"/>
+            <circle cx="32" cy="90" r="1.5" fill="#8a6fff" opacity="0.4"/>
+            <!-- Key in other hand -->
+            <circle cx="66" cy="120" r="7" fill="none" stroke="#e8c97a" stroke-width="1.2"/>
+            <line x1="71" y1="125" x2="82" y2="138" stroke="#e8c97a" stroke-width="1.2"/>
+            <line x1="79" y1="135" x2="83" y2="132" stroke="#e8c97a" stroke-width="1.2"/>
+            <line x1="81" y1="137" x2="85" y2="134" stroke="#e8c97a" stroke-width="1.2"/>
+            <!-- Eyes (dots) -->
+            <circle cx="95" cy="77" r="2" fill="#c9a84c"/>
+            <circle cx="105" cy="77" r="2" fill="#c9a84c"/>
+            <!-- Smile -->
+            <path d="M95 84 Q100 88 105 84" stroke="#c9a84c" stroke-width="1" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="container">
+    <div class="stats-grid reveal">
+      <div>
+        <div class="stat-num">$58B+</div>
+        <div class="stat-label">Unclaimed property across the US</div>
+      </div>
+      <div>
+        <div class="stat-num">97%</div>
+        <div class="stat-label">Client success rate</div>
+      </div>
+      <div>
+        <div class="stat-num">12K+</div>
+        <div class="stat-label">Successful claims made</div>
+      </div>
+      <div>
+        <div class="stat-num">No Win</div>
+        <div class="stat-label">No fee — ever</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="container">
+    <div class="how-header reveal">
+      <p class="section-tag">Our process</p>
+      <h2>Simple. <em>Transparent.</em> Magical.</h2>
+      <p class="section-intro">We do the heavy lifting — from searching complex registries to filing on your behalf. You just sit back and wait for the good news.</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num">1</div>
+        <h3>Free Eligibility Check</h3>
+        <p>Tell us a little about yourself and your family history. Our specialists run a confidential search across national property, estate, and dormant asset registers at no cost to you.</p>
+      </div>
+      <div class="step reveal" style="transition-delay:0.12s">
+        <div class="step-num">2</div>
+        <h3>We Build Your Claim</h3>
+        <p>Our legal and research team assembles all documentation, verifies entitlement chains, and prepares a watertight claim file — handling all the complex paperwork from start to finish.</p>
+      </div>
+      <div class="step reveal" style="transition-delay:0.24s">
+        <div class="step-num">3</div>
+        <h3>You Receive Your Property</h3>
+        <p>Once approved, assets are transferred directly to you. We only collect our agreed success fee after you've received your funds — zero upfront costs, zero risk.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="container">
+    <div class="reveal">
+      <p class="section-tag">What we recover</p>
+      <h2>Every type of <em>hidden asset</em><br>we specialise in</h2>
+    </div>
+    <div class="services-grid">
+      <div class="service-card reveal">
+        <span class="service-icon">🏡</span>
+        <h3>Dormant Estate Property</h3>
+        <p>Inherited land, houses, and buildings that were never formally transferred or that sat unclaimed in probate. We trace ownership chains back decades to establish your entitlement.</p>
+      </div>
+      <div class="service-card reveal" style="transition-delay:0.1s">
+        <span class="service-icon">🏦</span>
+        <h3>Unclaimed Financial Assets</h3>
+        <p>Bank accounts, building society accounts, premium bonds, shares, and insurance policies belonging to deceased relatives or opened and forgotten years ago.</p>
+      </div>
+      <div class="service-card reveal" style="transition-delay:0.15s">
+        <span class="service-icon">📜</span>
+        <h3>Intestate Estate Claims</h3>
+        <p>When someone dies without a will, their estate may escheat to the state. We identify overlooked beneficiaries and pursue claims against state unclaimed property offices and probate courts on your behalf.</p>
+      </div>
+      <div class="service-card reveal" style="transition-delay:0.2s">
+        <span class="service-icon">🌍</span>
+        <h3>International Property Recovery</h3>
+        <p>Property, land, and assets held abroad in other jurisdictions. Our network of international partners enables us to pursue claims across multiple legal systems simultaneously.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY CLAIMS FAIRY -->
+<section id="why">
+  <div class="container">
+    <div class="why-inner">
+      <div class="reveal">
+        <p class="section-tag">Why Choose Us</p>
+        <h2>More than a firm — your <em>advocates</em></h2>
+        <ul class="why-list">
+          <li>
+            <div class="why-check">✓</div>
+            <div>
+              <strong>No Win, No Fee</strong>
+              <p>You pay absolutely nothing unless we successfully recover your assets. There are no hidden charges, no retainer fees, and no surprises.</p>
+            </div>
+          </li>
+          <li>
+            <div class="why-check">✓</div>
+            <div>
+              <strong>Expert Legal Team</strong>
+              <p>Our in-house solicitors and researchers hold decades of combined experience in probate law, land registry disputes, and estate recovery.</p>
+            </div>
+          </li>
+          <li>
+            <div class="why-check">✓</div>
+            <div>
+              <strong>Complete Confidentiality</strong>
+              <p>Your personal data and claim details are handled with the highest level of discretion, fully compliant with UK data protection law.</p>
+            </div>
+          </li>
+          <li>
+            <div class="why-check">✓</div>
+            <div>
+              <strong>Nationwide Coverage</strong>
+              <p>We work with clients across all 50 states, as well as U.S. territories and international claims in over 30 countries.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="reveal" style="transition-delay:0.15s">
+        <div class="big-quote">
+          <blockquote>We had no idea my late grandmother owned a second property. Claims Fairy found it, navigated the legal maze, and within 8 months we received $148,000 that would otherwise have been lost forever.</blockquote>
+          <cite>— Sarah T., Nashville, TN</cite>
+        </div>
+        <div class="big-quote" style="margin-top:1.5rem">
+          <blockquote>Completely professional from start to finish. I was sceptical at first, but the team kept me informed every step of the way. No upfront cost — only good news at the end.</blockquote>
+          <cite>— James R., Denver, CO</cite>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="container">
+    <div class="reveal" style="text-align:center">
+      <p class="section-tag">Client stories</p>
+      <h2>Reuniting people with what is <em>rightfully theirs</em></h2>
+    </div>
+    <div class="testi-grid">
+      <div class="testi-card reveal">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"I was contacted by Claims Fairy about a potential claim I knew nothing about. Three months later I received $42,000 from a dormant account my father had held. Absolutely life-changing."</p>
+        <p class="testi-author">Michael A.</p>
+        <p class="testi-location">Austin, Texas</p>
+      </div>
+      <div class="testi-card reveal" style="transition-delay:0.1s">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"The team was patient, explained every stage clearly, and fought hard on our behalf. We never expected to own land in Wales — but here we are."</p>
+        <p class="testi-author">The Williams Family</p>
+        <p class="testi-location">Phoenix, Arizona</p>
+      </div>
+      <div class="testi-card reveal" style="transition-delay:0.2s">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"Outstanding service. They handled everything — I just provided a few documents and they did the rest. Highly recommend to anyone who suspects there might be hidden assets in their family."</p>
+        <p class="testi-author">Patricia H.</p>
+        <p class="testi-location">Atlanta, Georgia</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="container">
+    <div class="faq-header reveal" style="text-align:center">
+      <p class="section-tag">Common questions</p>
+      <h2>Everything you need<br>to <em>know</em></h2>
+    </div>
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">How do you find unclaimed property I don't know about? <span class="faq-arrow">↓</span></button>
+        <div class="faq-a"><p>We access a wide range of public and specialist databases — including each state's unclaimed property registry, the NAUPA database, county probate records, and federal escheatment filings — cross-referencing these against your family history to identify potential entitlements.</p></div>
+      </div>
+      <div class="faq-item" style="margin-top:1px">
+        <button class="faq-q" onclick="toggleFaq(this)">How long does a claim typically take? <span class="faq-arrow">↓</span></button>
+        <div class="faq-a"><p>It varies depending on the complexity of the case. Simple financial asset recoveries can complete in 3–6 months. Estate and land claims can take 12–24 months due to legal verification requirements. We keep you updated throughout the entire process.</p></div>
+      </div>
+      <div class="faq-item" style="margin-top:1px">
+        <button class="faq-q" onclick="toggleFaq(this)">What is your fee structure? <span class="faq-arrow">↓</span></button>
+        <div class="faq-a"><p>We operate strictly on a no win, no fee basis. Our success fee — agreed before any work begins — is a percentage of the recovered value, typically between 20–30% depending on claim complexity. There are no upfront costs, no hidden charges, and nothing to pay if we are unsuccessful.</p></div>
+      </div>
+      <div class="faq-item" style="margin-top:1px">
+        <button class="faq-q" onclick="toggleFaq(this)">Can you help if the original property owner has passed away? <span class="faq-arrow">↓</span></button>
+        <div class="faq-a"><p>Absolutely. The majority of our claims involve tracing and recovering assets from deceased individuals' estates. We work with living relatives, descendants, and legal representatives to establish entitlement and complete the claim on behalf of rightful heirs.</p></div>
+      </div>
+      <div class="faq-item" style="margin-top:1px">
+        <button class="faq-q" onclick="toggleFaq(this)">Is my personal information kept private? <span class="faq-arrow">↓</span></button>
+        <div class="faq-a"><p>Yes. All client information is handled in strict confidence in accordance with applicable U.S. federal and state privacy laws. We never share your details with third parties without your explicit consent, and all communications are fully encrypted.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<section id="cta-banner">
+  <div class="container">
+    <div class="cta-box reveal">
+      <p class="section-tag">Uncover what's yours</p>
+      <h2>Your free claim check takes<br><em>less than 5 minutes.</em></h2>
+      <p>There's absolutely nothing to lose. Fill in a short form, and our specialists will confidentially search for any unclaimed property or assets in your name or family.</p>
+      <a href="#contact" class="btn-primary">✦ Get My Free Claim Check</a>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="container">
+    <div class="contact-inner">
+      <div class="reveal">
+        <p class="section-tag">Get in touch</p>
+        <h2>Let's find what belongs<br>to <em>you.</em></h2>
+        <p class="section-intro">Our team will review your details and respond within one business day to let you know if we've identified a potential claim.</p>
+
+        <div class="contact-detail">
+          <div class="contact-icon">📍</div>
+          <div>
+            <h4>Address</h4>
+            <p>350 Fifth Avenue, Suite 4200, New York, NY 10118</p>
+          </div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-icon">📞</div>
+          <div>
+            <h4>Phone</h4>
+            <p>1-800-CLAIM-FY (toll-free)</p>
+          </div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-icon">✉️</div>
+          <div>
+            <h4>Email</h4>
+            <p>hello@claimsfairy.com</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal" style="transition-delay:0.15s">
+        <div class="contact-form">
+          <div class="form-row">
+            <div class="field">
+              <label>First Name</label>
+              <input type="text" placeholder="Jane"/>
+            </div>
+            <div class="field">
+              <label>Last Name</label>
+              <input type="text" placeholder="Smith"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>Email Address</label>
+            <input type="email" placeholder="jane@example.com"/>
+          </div>
+          <div class="field">
+            <label>Phone Number</label>
+            <input type="tel" placeholder="(555) 000-0000"/>
+          </div>
+          <div class="field">
+            <label>Type of Claim</label>
+            <select>
+              <option value="">— Select —</option>
+              <option>Dormant Estate / Property</option>
+              <option>Unclaimed Financial Assets</option>
+              <option>Intestate Estate</option>
+              <option>International Property</option>
+              <option>Not Sure — Please Advise</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tell us more (optional)</label>
+            <textarea placeholder="Any relevant background about the potential asset or family history…"></textarea>
+          </div>
+          <button class="btn-primary" style="align-self:flex-start; border:none;" onclick="submitForm(this)">✦ Submit Free Claim Check</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="#" class="nav-logo" style="font-size:1.35rem">Claims <span style="font-style:italic;font-weight:300;color:var(--text)">Fairy</span> ✦</a>
+        <p>Reuniting people with hidden property and assets since 2012. No win, no fee — ever.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Services</h4>
+        <ul>
+          <li><a href="#services">Estate Property</a></li>
+          <li><a href="#services">Financial Assets</a></li>
+          <li><a href="#services">Intestate Claims</a></li>
+          <li><a href="#services">International Recovery</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#why">About Us</a></li>
+          <li><a href="#how">How It Works</a></li>
+          <li><a href="#testimonials">Client Stories</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Cookie Policy</a></li>
+          <li><a href="#">Complaints Procedure</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 Claims Fairy LLC. Registered in the State of New York. All rights reserved.</p>
+      <span class="footer-badge">✦ Authorised & Regulated</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* ── Starfield ── */
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function initStars() {
+    stars = [];
+    for (let i = 0; i < 160; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.2 + 0.2,
+        a: Math.random(),
+        speed: Math.random() * 0.004 + 0.001,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  function drawStars(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      const alpha = (Math.sin(t * s.speed + s.phase) + 1) / 2 * 0.55 + 0.1;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(232,201,122,${alpha})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(drawStars);
+  }
+
+  resize();
+  initStars();
+  requestAnimationFrame(drawStars);
+  window.addEventListener('resize', () => { resize(); initStars(); });
+
+  /* ── Scroll reveal ── */
+  const revealEls = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(el => obs.observe(el));
+
+  /* ── FAQ accordion ── */
+  function toggleFaq(btn) {
+    const item = btn.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  /* ── Form submit ── */
+  function submitForm(btn) {
+    btn.textContent = '✓ Submitted — we\'ll be in touch!';
+    btn.style.background = '#4caf80';
+    btn.disabled = true;
+  }
+</script>
+</body>
+</html>
