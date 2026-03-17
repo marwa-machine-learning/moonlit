@@ -1339,7 +1339,7 @@
 
       <!-- Contact Form Column -->
       <div class="contact-form-wrapper reveal" style="transition-delay: 0.15s;">
-        <form class="contact-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+        <form class="contact-form" id="claimsForm">
           <div class="form-message" id="formMessage"></div>
           
           <div class="form-row">
@@ -1487,45 +1487,66 @@
     if (!isOpen) item.classList.add('open');
   }
 
-  /* ── Formspree Form Handling (Fixed) ── */
-  const contactForm = document.querySelector('.contact-form');
+  /* ── Form Handling with Web3Forms ── */
+  const contactForm = document.getElementById('claimsForm');
   const formMessage = document.getElementById('formMessage');
 
   contactForm.addEventListener('submit', function(e) {
     e.preventDefault();
     
-    const formData = new FormData(this);
-    
-    // Send to Formspree using FormData (no JSON conversion)
-    fetch(this.action, {
+    // Get form values
+    const firstName = document.querySelector('input[name="firstName"]').value;
+    const lastName = document.querySelector('input[name="lastName"]').value;
+    const email = document.querySelector('input[name="email"]').value;
+    const phone = document.querySelector('input[name="phone"]').value;
+    const claimType = document.querySelector('select[name="claimType"]').value;
+    const message = document.querySelector('textarea[name="message"]').value;
+
+    // Send using Web3Forms
+    fetch('https://api.web3forms.com/submit', {
       method: 'POST',
-      body: formData,
       headers: {
-        'Accept': 'application/json'
-      }
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        access_key: 'f7d94562-b8ff-4d77-a6d8-bd593062dec9',
+        email: 'contracts@claimsfairy.com',
+        subject: `New Claims Fairy Form Submission from ${firstName} ${lastName}`,
+        message: `
+New Claim Submission from Claims Fairy Website
+
+Customer Information:
+- First Name: ${firstName}
+- Last Name: ${lastName}
+- Email: ${email}
+- Phone: ${phone}
+- Type of Claim: ${claimType}
+- Message: ${message || 'None provided'}
+
+Please review this submission and respond within 24 hours.
+        `,
+        from_name: firstName + ' ' + lastName,
+        reply_to: email
+      })
     })
-    .then(response => {
-      if (response.ok) {
-        // Success message
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
         formMessage.className = 'form-message success';
         formMessage.textContent = '✓ Submitted successfully! We\'ll review your claim and contact you within 24 hours.';
-        
-        // Reset form
         contactForm.reset();
         formMessage.style.display = 'block';
         
-        // Hide message after 6 seconds
         setTimeout(() => {
           formMessage.style.display = 'none';
         }, 6000);
       } else {
-        throw new Error('Form submission failed');
+        throw new Error('Submission failed');
       }
     })
     .catch(error => {
-      // Error message
       formMessage.className = 'form-message error';
-      formMessage.textContent = '✗ Something went wrong. Please try again or contact us directly at contracts@claimsfairy.com';
+      formMessage.textContent = '✗ Error submitting form. Please try again or contact us at contracts@claimsfairy.com';
       formMessage.style.display = 'block';
       console.error('Error:', error);
     });
