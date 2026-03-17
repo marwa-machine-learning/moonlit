@@ -880,6 +880,30 @@
       min-height: 120px;
     }
 
+    /* Success message */
+    .form-message {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.4rem;
+      display: none;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    .form-message.success {
+      display: block;
+      background: rgba(76, 175, 80, 0.1);
+      border: 1px solid rgba(76, 175, 80, 0.3);
+      color: #4caf80;
+    }
+
+    .form-message.error {
+      display: block;
+      background: rgba(244, 67, 54, 0.1);
+      border: 1px solid rgba(244, 67, 54, 0.3);
+      color: #f44336;
+    }
+
     /* ── Footer ── */
     footer {
       border-top: 1px solid rgba(255,255,255,0.06);
@@ -966,30 +990,6 @@
     .reveal.visible {
       opacity: 1;
       transform: none;
-    }
-
-    /* Success message */
-    .form-message {
-      padding: 1rem;
-      border-radius: 8px;
-      margin-bottom: 1.4rem;
-      display: none;
-      text-align: center;
-      font-size: 0.9rem;
-    }
-
-    .form-message.success {
-      display: block;
-      background: rgba(76, 175, 80, 0.1);
-      border: 1px solid rgba(76, 175, 80, 0.3);
-      color: #4caf80;
-    }
-
-    .form-message.error {
-      display: block;
-      background: rgba(244, 67, 54, 0.1);
-      border: 1px solid rgba(244, 67, 54, 0.3);
-      color: #f44336;
     }
 
     /* ── Responsive ── */
@@ -1487,24 +1487,22 @@
     if (!isOpen) item.classList.add('open');
   }
 
-  /* ── Formspree Form Handling ── */
+  /* ── Formspree Form Handling (Fixed) ── */
   const contactForm = document.querySelector('.contact-form');
   const formMessage = document.getElementById('formMessage');
 
   contactForm.addEventListener('submit', function(e) {
     e.preventDefault();
     
-    // Collect form data
     const formData = new FormData(this);
-    const data = Object.fromEntries(formData);
     
-    // Send to Formspree
+    // Send to Formspree using FormData (no JSON conversion)
     fetch(this.action, {
       method: 'POST',
+      body: formData,
       headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data)
+        'Accept': 'application/json'
+      }
     })
     .then(response => {
       if (response.ok) {
@@ -1514,6 +1512,7 @@
         
         // Reset form
         contactForm.reset();
+        formMessage.style.display = 'block';
         
         // Hide message after 6 seconds
         setTimeout(() => {
@@ -1526,7 +1525,8 @@
     .catch(error => {
       // Error message
       formMessage.className = 'form-message error';
-      formMessage.textContent = '✗ Something went wrong. Please try again or contact us directly.';
+      formMessage.textContent = '✗ Something went wrong. Please try again or contact us directly at contracts@claimsfairy.com';
+      formMessage.style.display = 'block';
       console.error('Error:', error);
     });
   });
